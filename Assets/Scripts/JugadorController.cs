@@ -10,7 +10,7 @@ public class JugadorController : MonoBehaviour
     InputAction moveAction;
     InputAction jumpAction;
     Rigidbody2D rb2d;
-    BoxCollider2D con;
+    CapsuleCollider2D con;
 
     int layerSuelo;
 
@@ -20,9 +20,9 @@ public class JugadorController : MonoBehaviour
         jumpAction = InputSystem.actions.FindAction("Jump");
 
         rb2d = GetComponent<Rigidbody2D>();
-        con = GetComponent<BoxCollider2D>();
+        con = GetComponent<CapsuleCollider2D>();
 
-        layerSuelo = LayerMask.GetMask("suelo");
+        layerSuelo = LayerMask.GetMask("Suelo");
     }
 
     void Update()
