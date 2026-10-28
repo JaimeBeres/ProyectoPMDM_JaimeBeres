@@ -40,7 +40,6 @@ public class JugadorController : MonoBehaviour
 
     private Vector2 movimiento;
     private bool saltoSolicitado;
-    private bool controlGanchoActivo;
 
     void Start()
     {
@@ -70,7 +69,7 @@ public class JugadorController : MonoBehaviour
         }
 
         // Girar el sprite según la dirección de movimiento.
-        if (!controlGanchoActivo && spriteRenderer != null)
+        if (spriteRenderer != null)
         {
             if (movimiento.x < -0.01f)
                 spriteRenderer.flipX = true;
@@ -79,67 +78,49 @@ public class JugadorController : MonoBehaviour
         }
     }
 
-    public void EstablecerControlGancho(bool activo)
-    {
-        controlGanchoActivo = activo;
-
-        // Evitar que quede una pulsación de salto pendiente
-        // mientras el gancho controla al personaje.
-        if (activo)
-            saltoSolicitado = false;
-    }
-
     void FixedUpdate()
     {
         bool enSuelo = TocaSuelo();
         bool hayPared = TocaPared(out float direccionSaltoPared);
 
-        // El movimiento normal solo actúa si el gancho
-        // no está controlando al personaje.
-        if (!controlGanchoActivo)
+        // Control del movimiento horizontal.
+        if (enSuelo || Mathf.Abs(movimiento.x) > 0.01f)
         {
-            // Control horizontal normal.
-            if (enSuelo || Mathf.Abs(movimiento.x) > 0.01f)
+            rb2d.linearVelocityX = movimiento.x * velocidad;
+        }
+        else
+        {
+            // Frenar gradualmente cuando no hay entrada horizontal en el aire.
+            rb2d.linearVelocityX = Mathf.MoveTowards(
+                rb2d.linearVelocityX,
+                0f,
+                frenadoAire * Time.fixedDeltaTime
+            );
+        }
+
+        // Procesar la petición de salto.
+        if (saltoSolicitado)
+        {
+            if (enSuelo)
             {
-                rb2d.linearVelocityX = movimiento.x * velocidad;
+                // Salto normal.
+                rb2d.linearVelocityY = salto;
+                enSuelo = false;
             }
-            else
+            else if (hayPared)
             {
-                // Frenar gradualmente cuando no hay entrada horizontal
-                // y el personaje está en el aire.
-                rb2d.linearVelocityX = Mathf.MoveTowards(
-                    rb2d.linearVelocityX,
-                    0f,
-                    frenadoAire * Time.fixedDeltaTime
+                // Salto en dirección contraria a la pared.
+                rb2d.linearVelocity = new Vector2(
+                    direccionSaltoPared * velocidadSaltoParedX,
+                    velocidadSaltoParedY
                 );
-            }
 
-            // Procesar la petición de salto.
-            if (saltoSolicitado)
-            {
-                if (enSuelo)
+                if (spriteRenderer != null)
                 {
-                    // Salto normal.
-                    rb2d.linearVelocityY = salto;
-                    enSuelo = false;
+                    spriteRenderer.flipX = direccionSaltoPared < 0f;
                 }
-                else if (hayPared)
-                {
-                    // Salto que impulsa al personaje
-                    // en dirección contraria a la pared.
-                    rb2d.linearVelocity = new Vector2(
-                        direccionSaltoPared * velocidadSaltoParedX,
-                        velocidadSaltoParedY
-                    );
 
-                    if (spriteRenderer != null)
-                    {
-                        spriteRenderer.flipX =
-                            direccionSaltoPared < 0f;
-                    }
-
-                    enSuelo = false;
-                }
+                enSuelo = false;
             }
         }
 
@@ -152,7 +133,7 @@ public class JugadorController : MonoBehaviour
             hayPared &&
             rb2d.linearVelocity.y < 0f;
 
-        // Limitar la velocidad de caída mientras se desliza.
+        // Limitar la velocidad de caída durante el deslizamiento.
         if (deslizandoPared &&
             rb2d.linearVelocity.y < -velocidadDeslizamientoPared)
         {
@@ -164,15 +145,10 @@ public class JugadorController : MonoBehaviour
 
         if (enSuelo)
         {
-            if (!controlGanchoActivo &&
-                Mathf.Abs(movimiento.x) > 0.01f)
-            {
+            if (Mathf.Abs(movimiento.x) > 0.01f)
                 estadoActual = EstadoAnimacion.Run;
-            }
             else
-            {
                 estadoActual = EstadoAnimacion.Idle;
-            }
         }
         else if (deslizandoPared)
         {
@@ -187,7 +163,7 @@ public class JugadorController : MonoBehaviour
             estadoActual = EstadoAnimacion.Fall;
         }
 
-        // Comunicar el estado elegido al Animator.
+        // Enviar el estado al Animator.
         animator.SetInteger("estado", (int)estadoActual);
     }
 
@@ -217,14 +193,15 @@ public class JugadorController : MonoBehaviour
                hit.normal.y > 0.5f;
     }
 
-    // Detecta una pared a izquierda o derecha y devuelve
-    // la dirección horizontal que aleja al personaje de ella.
+    // Detecta paredes a izquierda o derecha y devuelve
+    // la dirección horizontal que aleja al personaje de ellas.
     bool TocaPared(out float direccionSalto)
     {
         direccionSalto = 0f;
 
         float altura = con.bounds.center.y;
 
+        // Detectar una pared a la izquierda.
         Vector2 origenIzquierdo = new Vector2(
             con.bounds.min.x + 0.02f,
             altura
@@ -244,6 +221,7 @@ public class JugadorController : MonoBehaviour
             return true;
         }
 
+        // Detectar una pared a la derecha.
         Vector2 origenDerecho = new Vector2(
             con.bounds.max.x - 0.02f,
             altura
