@@ -6,13 +6,25 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(Animator))]
 public class JugadorController : MonoBehaviour
 {
+    public void Checkpoint(Vector2 posicion)
+    {
+        puntoReaparicion = posicion;
+        Debug.Log("Checkpoint activado");
+    }   
+    public void Morir()
+    {
+        rb2d.linearVelocity = Vector2.zero;
+        rb2d.angularVelocity = 0f;
+        rb2d.position = puntoReaparicion;
+    }
     private enum EstadoAnimacion
     {
         Idle = 0,
         Run = 1,
         Jump = 2,
         Fall = 3,
-        Walled = 4
+        Walled = 4,
+        died = 5
     }
 
     [Header("Movimiento")]
@@ -20,11 +32,9 @@ public class JugadorController : MonoBehaviour
     [SerializeField] private float salto = 8f;
     [SerializeField] private float frenadoAire = 10f;
 
-    [Header("Wall Slide")]
+    [Header("Mecanicas pared")]
     [SerializeField] private float velocidadDeslizamientoPared = 2f;
     [SerializeField] private float distanciaDeteccionPared = 0.12f;
-
-    [Header("Wall Jump")]
     [SerializeField] private float velocidadSaltoParedX = 7f;
     [SerializeField] private float velocidadSaltoParedY = 8f;
 
@@ -35,7 +45,7 @@ public class JugadorController : MonoBehaviour
     private CapsuleCollider2D con;
     private Animator animator;
     private SpriteRenderer spriteRenderer;
-
+    private Vector2 puntoReaparicion;
     private int layerSuelo;
 
     private Vector2 movimiento;
@@ -43,6 +53,7 @@ public class JugadorController : MonoBehaviour
 
     void Start()
     {
+        puntoReaparicion = rb2d.position;
         moveAction = InputSystem.actions.FindAction("Move");
         jumpAction = InputSystem.actions.FindAction("Jump");
 
