@@ -1,22 +1,11 @@
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-[RequireComponent(typeof(Rigidbody2D))]
-[RequireComponent(typeof(CapsuleCollider2D))]
-[RequireComponent(typeof(Animator))]
+
 public class JugadorController : MonoBehaviour
 {
-    public void Checkpoint(Vector2 posicion)
-    {
-        puntoReaparicion = posicion;
-        Debug.Log("Checkpoint activado");
-    }   
-    public void Morir()
-    {
-        rb2d.linearVelocity = Vector2.zero;
-        rb2d.angularVelocity = 0f;
-        rb2d.position = puntoReaparicion;
-    }
+    
     private enum EstadoAnimacion
     {
         Idle = 0,
@@ -50,10 +39,11 @@ public class JugadorController : MonoBehaviour
 
     private Vector2 movimiento;
     private bool saltoSolicitado;
-
+    private int frutasRecogidas = 0;
+    float velocidadPlataforma = 0f;
     void Start()
     {
-        puntoReaparicion = rb2d.position;
+        
         moveAction = InputSystem.actions.FindAction("Move");
         jumpAction = InputSystem.actions.FindAction("Jump");
 
@@ -63,6 +53,7 @@ public class JugadorController : MonoBehaviour
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
 
         layerSuelo = LayerMask.GetMask("Suelo");
+        puntoReaparicion = rb2d.position;
     }
 
     void Update()
@@ -87,6 +78,7 @@ public class JugadorController : MonoBehaviour
             else if (movimiento.x > 0.01f)
                 spriteRenderer.flipX = false;
         }
+        
     }
 
     void FixedUpdate()
@@ -152,7 +144,7 @@ public class JugadorController : MonoBehaviour
         }
 
         // Elegir un único estado de animación.
-        EstadoAnimacion estadoActual;
+        EstadoAnimacion estadoActual = 0;
 
         if (enSuelo)
         {
@@ -169,13 +161,14 @@ public class JugadorController : MonoBehaviour
         {
             estadoActual = EstadoAnimacion.Jump;
         }
-        else
+        else if(!enSuelo && !deslizandoPared && rb2d.linearVelocity.y < 0)
         {
             estadoActual = EstadoAnimacion.Fall;
         }
 
         // Enviar el estado al Animator.
         animator.SetInteger("estado", (int)estadoActual);
+        
     }
 
     // Comprueba si existe una superficie válida debajo de los pies.
@@ -196,7 +189,7 @@ public class JugadorController : MonoBehaviour
             tamano,
             0f,
             Vector2.down,
-            0.12f,
+            0.32f,
             layerSuelo
         );
 
@@ -251,7 +244,24 @@ public class JugadorController : MonoBehaviour
             direccionSalto = hitDerecho.normal.x;
             return true;
         }
-
+        
         return false;
+    }
+    public void Checkpoint(Vector2 posicion)
+    {
+        puntoReaparicion = posicion;
+        Debug.Log("Checkpoint activado");
+    }   
+    public void Morir()
+    {
+        rb2d.linearVelocity = Vector2.zero;
+        rb2d.angularVelocity = 0f;
+        rb2d.position = puntoReaparicion;
+    }
+    public void RecogerFruta()
+    {
+        frutasRecogidas++;
+        Debug.Log($"Frutas recogidas: {frutasRecogidas}");
+
     }
 }
