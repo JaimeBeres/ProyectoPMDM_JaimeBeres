@@ -13,12 +13,14 @@ public class JugadorController : MonoBehaviour
         Jump = 2,
         Fall = 3,
         Walled = 4,
-        died = 5
+        died = 5,
+        djump = 6
     }
 
     [Header("Movimiento")]
     [SerializeField] private float velocidad = 5f;
     [SerializeField] private float salto = 8f;
+    [SerializeField] private float dSalto = 4f;
     [SerializeField] private float frenadoAire = 10f;
 
     [Header("Mecanicas pared")]
@@ -39,6 +41,9 @@ public class JugadorController : MonoBehaviour
 
     private Vector2 movimiento;
     private bool saltoSolicitado;
+    private bool haSaltadoPared;
+    private bool dobleSalto = true;
+    private bool muriendo = false;
     private int frutasRecogidas = 0;
     float velocidadPlataforma = 0f;
     void Start()
@@ -83,11 +88,22 @@ public class JugadorController : MonoBehaviour
 
     void FixedUpdate()
     {
+        if(muriendo) return;
         bool enSuelo = TocaSuelo();
         bool hayPared = TocaPared(out float direccionSaltoPared);
 
+        if (!dobleSalto)
+        {
+            haSaltadoPared = false;
+        }
+        if (enSuelo || hayPared)
+        {
+            dobleSalto = true;
+            haSaltadoPared = false;
+        }
+        
         // Control del movimiento horizontal.
-        if (enSuelo || Mathf.Abs(movimiento.x) > 0.01f)
+        if (enSuelo || Mathf.Abs(movimiento.x) > 0.01f && !haSaltadoPared)
         {
             rb2d.linearVelocityX = movimiento.x * velocidad;
         }
@@ -122,8 +138,14 @@ public class JugadorController : MonoBehaviour
                 {
                     spriteRenderer.flipX = direccionSaltoPared < 0f;
                 }
-
+                haSaltadoPared = true;
                 enSuelo = false;
+            }
+            else if (!enSuelo && dobleSalto)
+            {
+                if(rb2d.linearVelocityY < 0) rb2d.linearVelocityY = dSalto;
+                else rb2d.linearVelocityY += dSalto;
+                dobleSalto = false;
             }
         }
 
@@ -134,7 +156,7 @@ public class JugadorController : MonoBehaviour
         bool deslizandoPared =
             !enSuelo &&
             hayPared &&
-            rb2d.linearVelocity.y < 0f;
+            rb2d.linearVelocity.y <= 0f;
 
         // Limitar la velocidad de caída durante el deslizamiento.
         if (deslizandoPared &&
@@ -157,9 +179,13 @@ public class JugadorController : MonoBehaviour
         {
             estadoActual = EstadoAnimacion.Walled;
         }
-        else if (rb2d.linearVelocity.y > 0.01f)
+        else if (rb2d.linearVelocity.y > 0.01f && dobleSalto)
         {
             estadoActual = EstadoAnimacion.Jump;
+        }
+        else if (rb2d.linearVelocity.y > 0.01f && !dobleSalto)
+        {
+            estadoActual = EstadoAnimacion.djump;
         }
         else if(!enSuelo && !deslizandoPared && rb2d.linearVelocity.y < 0)
         {
@@ -251,12 +277,23 @@ public class JugadorController : MonoBehaviour
     {
         puntoReaparicion = posicion;
         Debug.Log("Checkpoint activado");
-    }   
+    }  
+    public void Reaparecer()
+    {
+        rb2d.position = puntoReaparicion;
+        muriendo = false;
+    } 
     public void Morir()
     {
+        if(muriendo) return;
+        muriendo = true;
         rb2d.linearVelocity = Vector2.zero;
         rb2d.angularVelocity = 0f;
-        rb2d.position = puntoReaparicion;
+        
+        EstadoAnimacion estadoActual = EstadoAnimacion.died;
+        animator.SetInteger("estado", (int)estadoActual);
+        Invoke(nameof(Reaparecer), 2f);
+        
     }
     public void RecogerFruta()
     {

@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 591832324334026264}
   - component: {fileID: 7219567043073719967}
+  - component: {fileID: 1434501095440564805}
   m_Layer: 0
   m_Name: Pinchos
   m_TagString: Untagged
@@ -91,3 +92,15 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!114 &1434501095440564805
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3988536772608771734}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a025c9418264804b882c0766ad7f40a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MuertePorTrampa
