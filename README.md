@@ -4,7 +4,7 @@
 
 ## Descripción
 
-Pink Runner es un videojuego de plataformas en 2D en el que controlas a PinkMan, quien debe alcanzar el trofeo final en el menor tiempo posible y con la mayor cantidad de frutas que pueda. Estas frutas se van sumando al contador y se guardan cada vez que llegas a un punto de control, pero ojo!! Si te mueres antes de llegar al siguiente punto perderás las frutas acumuladas desde el punto anterior y no podras volver a cogerlas, por lo que debes pensartelo bien antes de asumir riesgos.
+Pink Runner es un videojuego de plataformas en 2D en el que controlas a PinkMan, quien debe alcanzar el trofeo final en el menor tiempo posible y con la mayor cantidad de frutas que pueda. Estas frutas se van sumando al contador y se guardan cada vez que llegas a un punto de control, pero ojo!! Si te mueres antes de llegar al siguiente punto perderás las frutas acumuladas desde el punto anterior y no podras volver a recogerlas, por lo que debes pensártelo bien antes de asumir riesgos.
 
 ## Características
 
